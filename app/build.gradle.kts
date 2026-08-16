@@ -15,16 +15,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        manifestPlaceholders["appName"] = "Render Dragon – AnimePahe"
+        manifestPlaceholders["appName"] = "Render Dragon - AnimePahe"
     }
 
-    /*
-     * Release signing
-     *
-     * GitHub Actions supplies these values through environment variables.
-     * The keystore itself is reconstructed in the workflow's temporary
-     * directory and is never committed to the repository.
-     */
     signingConfigs {
         create("release") {
             val keystorePath = System.getenv("KEYSTORE_FILE")
@@ -74,8 +67,11 @@ dependencies {
     }
 
     // HTTP
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // Force the Okio version compatible with the older D8/R8 toolchain
+    implementation("com.squareup.okio:okio:3.4.0")
 
     // JSON
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")

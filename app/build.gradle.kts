@@ -9,7 +9,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "eu.kanade.tachiyomi.animeextension.en.animepahe"
+        applicationId = "com.renderdragon.app"
         minSdk = 21
         targetSdk = 34
         versionCode = 1

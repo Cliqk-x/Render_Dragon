@@ -5,11 +5,14 @@ plugins {
 }
 
 android {
-    namespace = "eu.kanade.tachiyomi.animeextension.en.animepahe"
+    namespace = "com.cliqkx.renderdragon.animepahe"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "eu.kanade.tachiyomi.animeextension.en.animepahe"
+        // Unique package ID so Android does not treat this as the
+        // existing official AnimePahe extension.
+        applicationId = "com.cliqkx.renderdragon.animepahe"
+
         minSdk = 21
         targetSdk = 34
         versionCode = 1

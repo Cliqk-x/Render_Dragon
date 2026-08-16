@@ -15,9 +15,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ─────────────────────────────────────────────
+      # Checkout
+      # ─────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ─────────────────────────────────────────────
+      # Java
+      # ─────────────────────────────────────────────
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -25,6 +31,9 @@ jobs:
           java-version: '17'
           cache: gradle
 
+      # ─────────────────────────────────────────────
+      # Android SDK
+      # ─────────────────────────────────────────────
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
@@ -33,12 +42,35 @@ jobs:
           sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
           yes | sdkmanager --licenses || true
 
+      # ─────────────────────────────────────────────
+      # Decode signing keystore
+      # ─────────────────────────────────────────────
       - name: Decode signing keystore
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.SIGNED }}
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/renderdragon-release.jks"
 
+          test -s "$RUNNER_TEMP/renderdragon-release.jks"
+
+          echo "Keystore file created successfully."
+
+      # ─────────────────────────────────────────────
+      # Validate signing keystore
+      # ─────────────────────────────────────────────
+      - name: Validate signing keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -list \
+            -keystore "$RUNNER_TEMP/renderdragon-release.jks" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS"
+
+      # ─────────────────────────────────────────────
+      # Gradle
+      # ─────────────────────────────────────────────
       - name: Make Gradle executable
         run: chmod +x ./gradlew
 
@@ -48,21 +80,34 @@ jobs:
           ./gradlew --version
           echo "ANDROID_HOME=$ANDROID_HOME"
 
+      # ─────────────────────────────────────────────
+      # Clean
+      # ─────────────────────────────────────────────
       - name: Clean
         run: ./gradlew clean --stacktrace
 
+      # ─────────────────────────────────────────────
+      # Build signed release APK
+      # ─────────────────────────────────────────────
       - name: Build Signed Release APK
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/renderdragon-release.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --stacktrace --info
+        run: |
+          ./gradlew assembleRelease --stacktrace --info
 
+      # ─────────────────────────────────────────────
+      # Verify APK signature
+      # ─────────────────────────────────────────────
       - name: Verify APK signature
         run: |
           "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose app/build/outputs/apk/release/*.apk
 
+      # ─────────────────────────────────────────────
+      # Upload APK
+      # ─────────────────────────────────────────────
       - name: Upload Signed APK
         if: success()
         uses: actions/upload-artifact@v4

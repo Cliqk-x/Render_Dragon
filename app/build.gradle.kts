@@ -5,14 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.cliqkx.renderdragon.animepahe"
+    namespace = "eu.kanade.tachiyomi.animeextension.en.animepahe"
     compileSdk = 34
 
     defaultConfig {
-        // Unique package ID so Android does not treat this as the
-        // existing official AnimePahe extension.
-        applicationId = "com.cliqkx.renderdragon.animepahe"
-
+        applicationId = "eu.kanade.tachiyomi.animeextension.en.animepahe"
         minSdk = 21
         targetSdk = 34
         versionCode = 1
@@ -21,10 +18,32 @@ android {
         manifestPlaceholders["appName"] = "Render Dragon – AnimePahe"
     }
 
+    /*
+     * Release signing
+     *
+     * GitHub Actions supplies these values through environment variables.
+     * The keystore itself is reconstructed in the workflow's temporary
+     * directory and is never committed to the repository.
+     */
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_FILE")
+
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             isShrinkResources = false
+
+            signingConfig = signingConfigs.getByName("release")
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -48,17 +67,6 @@ android {
     }
 }
 
-/*
- * Prevent JVM-only coroutine debugging classes from entering
- * the Android dex pipeline.
- */
-configurations.configureEach {
-    exclude(
-        group = "org.jetbrains.kotlinx",
-        module = "kotlinx-coroutines-debug",
-    )
-}
-
 dependencies {
     // Aniyomi extension API
     compileOnly("com.github.aniyomiorg:extensions-lib:14") {
@@ -66,13 +74,13 @@ dependencies {
     }
 
     // HTTP
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // JSON
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
 
-    // Injekt
+    // Dependency injection
     implementation("uy.kohesive.injekt:injekt-core:1.16.1")
 
     // Preferences
